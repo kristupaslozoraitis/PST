@@ -1,0 +1,53 @@
+﻿@page "/products/{id}"
+@inject NavigationManager NavigationManager
+
+<h5>It only takes a minute and you can show your joy to others!</h5>
+<br />
+<button type="button" class="btn btn-outline-info" @onclick="@( async () => await ShowForm())">Upload</button>
+<br />
+<div class="mat-layout-grid">
+    <div class="mat-layout-grid-inner">
+        @foreach (var product in products)
+        {
+            <ProductCard Product="product" User="user" />
+        }
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public string Id { get; set; }
+
+    public List<Product> products { get; set; } = new List<Product>();
+    public User user { get; set; } = new User();
+
+    protected async override Task OnInitializedAsync()
+    {
+        string token = request.RefreshToken;
+        RefreshToken rtoken = await refreshService.GetByToken(token);
+        user = await users.GetUserById(rtoken.UserId);
+        products = await productService.GetProductsByUserId(user.Id);
+        for(int i=products.Count()-1;i>=0;i--)
+        {
+            products.Insert(products.Count(), products[i]);
+            products.RemoveAt(i);
+        }
+    }
+
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+
+    private async Task ShowForm()
+    {
+        var options = new ModalOptions()
+        {
+            Class = "blazored-modal-sell"
+        };
+
+        var sellModal = Modal.Show<SellForm>("Upload and sell your joy!", options);
+        var result = await sellModal.Result;
+        NavigationManager.NavigateTo($"/index/{user.Id.ToString()}", forceLoad:true);
+    }
+}

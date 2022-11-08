@@ -1,0 +1,17 @@
+﻿@using KAMANDAX.Pages
+@using MatBlazor
+@inject NavigationManager NavigationManager
+
+<CascadingBlazoredModal>
+    <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <MatToastContainer />
+        </Found>
+        <NotFound>
+            <ErrorPage></ErrorPage>
+
+        </NotFound>
+    </Router>
+</CascadingBlazoredModal>
+

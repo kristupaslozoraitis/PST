@@ -1,0 +1,44 @@
+﻿@inherits LayoutComponentBase
+
+    <div class="main" style="padding: 0px;margin: 0px;border: 0px solid green;">
+
+        <NavMenu />
+        <div style="display: flex;min-height: 100vh;flex-direction: column;justify-content: space-between;min-width: 100%;padding: 0px;margin: 0px;border: 0px solid green;">
+            <div class="content px-4">
+                @Body
+            </div>
+
+            <div id="footerDiv" style="text-align: center; height: 60px; clear: both; background: #808080;min-width: 100%;">
+
+                <div class="socialMedia" style="display: flex;margin: auto;position: relative;width: 800px;vertical-align: middle;">
+                    <div style="vertical-align: middle;padding: 16px;">
+                        <p1 style="vertical-align: middle;">Phone: 863089775, Address: Pašilės 37g., Kaunas, Lietuva - LT52152</p1>
+                    </div>
+                    
+                    <div class="instagramDiv" >
+                        <a href="https://www.instagram.com/ktuspace/" target="_blank">
+                            <img class="instagramLogo" src="https://freeiconshop.com/wp-content/uploads/edd/instagram-new-color-flat.png" />
+                        </a>
+                    </div>
+                    <div class="facebookDiv">
+                        <a href="https://www.facebook.com/ktu.lt/" target="_blank">
+                            <img class="facebookLogo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Facebook_f_logo_%282019%29.svg/1365px-Facebook_f_logo_%282019%29.svg.png" />
+                        </a>
+                    </div>
+                    <div class="youtubeDiv" >
+                        <a href="https://www.youtube.com/user/ktuvideo" target="_blank">
+                            <img class="youtubeLogo" src="https://upload.wikimedia.org/wikipedia/commons/a/a0/YouTube_social_red_circle_%282017%29.svg" />
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+        @code
+{
+
+        }

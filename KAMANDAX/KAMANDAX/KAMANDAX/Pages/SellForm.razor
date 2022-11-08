@@ -1,0 +1,143 @@
+﻿@inject NavigationManager NavigationManager
+
+
+<div class="sellFormDiv">
+    <form>
+        <div class="mb-3">
+            <input type="text" class="form-control" placeholder="Product title" id="productTitle" @bind="TitleValue" @bind:event="oninput" />
+        </div>
+
+        <div class="mb-3">
+            <label for="productCategory" class="form-label">Choose a product category </label>
+            <select class="form-control form-control-sm" @bind="@selectedCategory">
+                <option value="Bracelets">Bracelets</option>
+                <option value="Earrings">Earrings</option>
+                <option value="Watches">Watches</option>
+                <option value="Rings">Rings</option>
+                <option value="Necklaces">Necklaces</option>
+
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <textarea class="form-control" id="description" placeholder="Description" rows="5" @bind="Description" @bind:event="oninput"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="productImage">Product image</label>
+            <InputFile OnChange="HandleFileSelection" />
+        </div>
+        <div class="mb-3">
+            <label for="sellingType" class="form-label">Choose selling type:</label>
+            <select class="form-control form-control-sm" @bind="@selectedType">
+                <option value="Fixed-price">Fixed Price</option>
+                <option value="Auction">Auction</option>
+            </select>
+        </div>
+        @if (selectedType.StartsWith("Fixed"))
+        {
+            <div class="input-group mb-3" id="priceInput">
+                <input type="text" class="form-control" aria-label="Amount (to the nearest dollar)" @bind="Cost" @bind:event="oninput">
+                <div class="input-group-append">
+                    <span class="input-group-text">Eur</span>
+                </div>
+            </div>
+        }
+        else if (selectedType.Equals("Auction"))
+        {
+
+            <div class="mb-3">
+                <label for="auctionType" class="form-label">Choose auction type:</label>
+                <select class="form-control form-control-sm" @bind="@AuctionType">
+                    <option disabled selected> Select auction type </option>
+                    <option value="Auction 1">Auction 1</option>
+                    <option value="Auction 2">Auction 2</option>
+                </select>
+            </div>
+
+            <div class="input-group mb-3" id="priceInput">
+                <label class="form-label">
+                    @if (AuctionType == "Auction 1")
+                    {
+                        string txt = "Auction 1 price: ";
+                        @txt
+                    }
+                    else if (AuctionType == "Auction 2")
+                    {
+                        string txt = "Auction 2 price: ";
+                        @txt
+                    }
+                </label>
+
+                <input type="text" class="form-control" aria-label="Amount (to the nearest dollar)" @bind="Cost" @bind:event="oninput">
+                <div class="input-group-append">
+                    <span class="input-group-text">Eur</span>
+                </div>
+            </div>
+
+        }
+    </form>
+        <button class="btn btn-outline-info" @onclick="@(async () => await HandleProductAddition())">Submit your joy</button>
+</div>
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+
+    string selectedCategory = "";
+    string selectedType = "";
+    string TitleValue;
+    string Description;
+    int Cost;
+    string AuctionType;
+
+    IFileListEntry file = null;
+    byte[] _fileBytes = null;
+
+
+
+
+    private async Task HandleProductAddition()
+    {
+        if (selectedType != null && TitleValue != null && Description != null && _fileBytes != null && selectedCategory != null)
+        {
+            if (selectedType == "Fixed-price" || (selectedType == "Auction" && AuctionType != null))
+            {
+                ProductRequest productModel = new ProductRequest();
+                productModel.Title = TitleValue;
+                productModel.Category = selectedCategory;
+                productModel.Description = Description;
+                productModel.SellingType = selectedType;
+                productModel.Price = Cost;
+                productModel.AuctionType = AuctionType;
+                productModel.ImageData = _fileBytes;
+                productModel.StartDate = DateTime.Today;
+
+                string token = request.RefreshToken;
+                RefreshToken rtoken = await refreshService.GetByToken(token);
+                User user = await users.GetUserById(rtoken.UserId);
+                await productController.AddProduct(productModel, user.Id);
+                Toaster.Add("Confirmation", MatToastType.Success, "The product uploaded successfully");
+                await Task.Delay(1000);
+                await ModalInstance.CloseAsync(ModalResult.Ok(product));
+            }
+        }
+        else
+        {
+            Console.WriteLine("Bad data!");
+        }
+
+    }
+
+    public async Task HandleFileSelection(IFileListEntry[] files)
+    {
+        if (files.Count() > 0)
+        {
+            file = files.FirstOrDefault();
+            using (var ms = new MemoryStream())
+            {
+                await file.Data.CopyToAsync(ms);
+                _fileBytes = ms.ToArray();
+            }
+        }
+    }
+
+}

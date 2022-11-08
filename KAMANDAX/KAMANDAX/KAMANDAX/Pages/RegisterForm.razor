@@ -1,0 +1,60 @@
+﻿@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Mvc;
+@using KAMANDAX.Controllers
+@using System.Net
+@using MatBlazor
+<div class="registerFormDiv">
+    <EditForm Model="@userModel" OnValidSubmit="@( async () => await HandleRegister())">
+        <br />
+
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <InputText @bind-Value="@userModel.FullName" class="form-control" placeholder="Full name" id="fullname" />
+            <ValidationMessage For="(() => userModel.FullName)" />
+
+        </div>
+        <div class="mb-3">
+            <InputText @bind-Value="@userModel.Email" class="form-control" placeholder="Email" id="email" />
+            <ValidationMessage For="(() => userModel.Email)" />
+        </div>
+        <div class="mb-3">
+            <InputText type="password" @bind-Value="@userModel.Password" class="form-control" placeholder="Create a password" id="password" />
+            <ValidationMessage For="(() => userModel.Password)" />
+        </div>
+
+        <div>
+            <button type="submit" class="btn btn-outline-info">Continue</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+
+    RegisterRequest userModel = new RegisterRequest();
+
+    private async Task HandleRegister()
+    {
+        IActionResult response = await authController.Register(userModel);
+        HttpStatusCode statusCode = (HttpStatusCode)response
+                .GetType()
+                .GetProperty("StatusCode")
+                .GetValue(response, null);
+        if (statusCode.ToString().Equals("OK"))
+        {
+            User user = await users.GetUserByEmail(userModel.Email);
+            RefreshToken token = await refreshService.GetByUserId(user.Id);
+            request.RefreshToken = token.Token;
+            NavigateToHomePage(user.Id.ToString());
+        }
+        else
+        {
+            Toaster.Add("The email you entered is already exist", MatToastType.Danger, "Register failed");
+        }
+
+    }
+
+    private void NavigateToHomePage(string id)
+    {
+        NavigationManager.NavigateTo($"/index/{id}", forceLoad: true);
+    }
+}

@@ -1,0 +1,107 @@
+﻿@page "/checkout/{id}/{type}"
+
+<h1>Order payment information</h1>
+<div class="loginFormDiv2">
+    <EditForm Model="@orderInformation" OnValidSubmit="@(async () => await HandleOrderAddition())">
+        <br />
+
+        <DataAnnotationsValidator />
+        @if (@Type.Equals("MasterCard") || @Type.Equals("VISA"))
+        {
+            <div class="mb-3">
+                <InputText @bind-Value="@orderInformation.CardHolder" class="form-control" placeholder="Card Holder" id="cardHolder" />
+
+            </div>
+            <div class="mb-3">
+                <InputText @bind-Value="@orderInformation.CardNumber" @onkeyup="SpaceBetweenCardNumbers" @oninput="(e) => orderInformation.CardNumber = e.Value.ToString()" class="form-control" placeholder="Card Number" id="cardNumber" />
+                <ValidationMessage For="(() => orderInformation.CardNumber)" />
+
+            </div>
+            <div class="flex-container">
+                <InputNumber @bind-Value="@orderInformation.CardMonth" class="form-control" placeholder="Month" id="cardMonth" />
+                <ValidationMessage For="(() => orderInformation.CardMonth)" />
+
+                <InputNumber @bind-Value="@orderInformation.CardYear" class="form-control" placeholder="Year" id="cardYear" />
+                <ValidationMessage For="(() => orderInformation.CardYear)" />
+
+                <InputNumber @bind-Value="@orderInformation.CardCVC" class="form-control" placeholder="CVC" id="cardCVC" />
+                <ValidationMessage For="(() => orderInformation.CardCVC)" />
+
+
+            </div>
+        }
+
+        else
+        {
+            <h1>aaaa</h1>
+
+        }
+
+        <MatButton Style="color:cornflowerblue">Next</MatButton>
+    </EditForm>
+
+
+
+</div>
+
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    [Parameter]
+    public string Type { get; set; }
+
+    OrderInformation orderInformation = new OrderInformation();
+
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+
+    string space = "";
+    int ind = 0;
+
+    private void SpaceBetweenCardNumbers()
+    {
+        var newValue = "";
+        var value = space;
+
+        if(orderInformation.CardNumber == "") { }
+
+        else if (orderInformation.CardNumber.Length == 4)
+        {
+            //bet esme kad insertas veikia tik iterpdamas i egzistuojanti indexa jis neprapleica. nebent kita koki naudot pridejmui
+            orderInformation.CardNumber = orderInformation.CardNumber + " ";
+        }
+        else if (orderInformation.CardNumber.Length == 9)
+        {
+            orderInformation.CardNumber = orderInformation.CardNumber + " ";
+        }
+        else if (orderInformation.CardNumber.Length == 14)
+        {
+            orderInformation.CardNumber = orderInformation.CardNumber + " ";
+        }
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        orderInformation = await orderService.GetOrder(Guid.Parse(Id));
+    }
+
+    private void RedirectToFullOrderPage()
+    {
+        NavigationManager.NavigateTo($"/fullorder/{Id}/{orderInformation.DeliveryType}/{orderInformation.PaymentType}");
+    }
+
+    private async Task HandleOrderAddition()
+    {
+        await orderService.UpdateOrder(orderInformation, orderInformation.OrderID);
+        orderInformation = await orderService.GetOrder(Guid.Parse(Id));
+
+        RedirectToFullOrderPage();
+
+    }
+
+   
+
+
+}
+

@@ -1,0 +1,220 @@
+﻿@using KAMANDAX.Pages
+@inject NavigationManager NavigationManager
+@inject Product product
+@inject List<Product> products
+
+<style>
+    .demo-mat-card {
+        max-width: 300px;
+    }
+
+    .demo-mat-card-content {
+        padding: 1rem;
+    }
+
+    .demo-mat-card-clean-margin {
+        margin: 0px;
+    }
+</style>
+
+<div class="mat-layout-grid-cell mat-layout-grid-cell-span-3">
+    <MatCard class="demo-mat-card">
+        <MatCardContent @onclick="async () => await RedirectToProductPage()">
+            <img src="data:image/bmp;base64, @(Convert.ToBase64String(Product.ImageData))" width="300" height="300" />
+            <div class="demo-mat-card-content">
+                <MatHeadline6 class="demo-mat-card-clean-margin">
+                    @Product.Title
+                </MatHeadline6>
+                <MatSubtitle1>
+                    @if (Product.SellingType == "Fixed-price")
+                    {
+                        string typeMsg = String.Format("Selling for: {0}€", Product.Price);
+                        @typeMsg
+                    }
+                    else if (Product.SellingType == "Auction" && Product.AuctionType == "Auction 1")
+                    {
+                        string typeMsg = String.Format("Auction 1. Price: {0}€", Product.Price);
+                        @typeMsg
+                    }
+                    else if (Product.SellingType == "Auction" && Product.AuctionType == "Auction 2")
+                    {
+                        string typeMsg = String.Format("Auction 2. Price: {0}€", Product.Price);
+                        @typeMsg
+                    }
+
+                </MatSubtitle1>
+                <MatSubtitle1>
+                    @if (Product.SellingType == "Fixed-price")
+                    {
+
+                    }
+                    else if (Product.SellingType == "Auction" && Product.AuctionType == "Auction 1")
+                    {
+                        //string typeMsg2 = String.Format("ProductB. ID {0} \n", Product.OrderedBy);
+                       // @typeMsg2
+                        //string typeMsg3 = String.Format("user ID {0} \n", User.Id);
+                        //@typeMsg3//koment veliau sita
+
+                        DateTime temp = Product.StartDate;
+                        endDate = temp.AddDays(7);
+
+                        if (DateTime.Today.CompareTo(endDate) <= 0)
+                        {
+                            string typeMsg = String.Format("Auction 1. end date: {0}", endDate);
+                            @typeMsg
+                        }
+                        else
+                        {
+                            string typeMsg = String.Format("Auction 1. has already ended, no more bids");
+                            @typeMsg
+                        }
+
+                    }
+                    else if (Product.SellingType == "Auction" && Product.AuctionType == "Auction 2")
+                    {
+
+                    }
+
+                </MatSubtitle1>
+            </div>
+
+            <MatBody2 class="demo-mat-card-content demo-mat-card-clean-margin">
+                @if (Product.Description.Length <= 25)
+                {
+                    @Product.Description
+                }
+                else
+                {
+                    string desc = Product.Description.Substring(0, 25).Trim() + "...";
+                    @desc
+                }
+            </MatBody2>
+        </MatCardContent>
+        <MatCardActions>
+
+            @if (Product.ProductUserId == User.Id)
+            {
+                <MatButton Style="color: green" @onclick="@(async () => await ShowEditForm())">Edit</MatButton>
+                if (Product.SellingType == "Auction") { }
+                else
+                {
+                    <MatButton Style="color: red" @onclick="@(async () => await HandleDelete())">Delete</MatButton>
+                }
+
+            }
+            else
+            {
+                if (Product.SellingType != "Auction")
+                {
+                    <MatButton Style="color:cornflowerblue " @onclick="@(async () => await HandleAddToCart())">Add to cart</MatButton>
+                }
+
+            }
+        </MatCardActions>
+    </MatCard>
+</div>
+
+@code {
+    [Parameter]
+    public Product Product { get; set; }
+    [Parameter]
+    public User User { get; set; }
+
+    public RefreshToken rtoken { get; set; }
+
+    DateTime endDate;
+
+    private async Task HandleDelete()
+    {
+        await productController.DeleteProduct(Product);
+
+        string token = request.RefreshToken;
+        rtoken = await refreshService.GetByToken(token);
+        IActionResult response = await authController.Refresh(request);
+        User user = await users.GetUserById(rtoken.UserId);
+        rtoken = await refreshService.GetByUserId(user.Id);
+        request.RefreshToken = rtoken.Token;
+        NavigationManager.NavigateTo($"/index/{rtoken.UserId.ToString()}", forceLoad: true);
+    }
+
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+    private async Task RedirectToProductPage()
+    {
+        product.ProductId = Product.ProductId;
+        product.ProductUserId = Product.ProductUserId;
+        product.Title = Product.Title;
+        product.Description = Product.Description;
+        product.Category = Product.Category;
+        product.SellingType = Product.SellingType;
+        product.Price = Product.Price;
+        product.AuctionType = Product.AuctionType;
+        product.ImageData = Product.ImageData;
+        product.TimesViewed = Product.TimesViewed;
+        product.OrderedBy = Product.OrderedBy;
+        product.StartDate = Product.StartDate;
+        products = await productService.GetProducts();
+        if (product.SellingType == "Auction" && DateTime.Today.CompareTo(endDate) <= 0)
+        {
+            NavigationManager.NavigateTo($"/product/{Product.ProductId}/{User.Id}", forceLoad: true);
+        }
+        else if (product.SellingType != "Auction")
+        {
+            NavigationManager.NavigateTo($"/product/{Product.ProductId}/{User.Id}", forceLoad: true);
+        }
+        else
+        {
+            Toaster.Add("Auction 1. has already ended", MatToastType.Danger, "Error");
+        }
+
+    }
+
+
+    private async Task ShowEditForm()
+    {
+        var options = new ModalOptions()
+        {
+            Class = "blazored-modal-sell"
+        };
+
+        product.ProductId = Product.ProductId;
+        product.ProductUserId = Product.ProductUserId;
+        product.Title = Product.Title;
+        product.Description = Product.Description;
+        product.Category = Product.Category;
+        product.SellingType = Product.SellingType;
+        product.Price = Product.Price;
+        product.AuctionType = Product.AuctionType;
+        product.ImageData = Product.ImageData;
+        product.OrderedBy = Product.OrderedBy;
+        product.StartDate = Product.StartDate;
+
+        var editModal = Modal.Show<ProductEditForm>("Edit your joy!", options);
+        var result = await editModal.Result;
+
+    }
+
+    private void ShowForm()
+    {
+        NavigationManager.NavigateTo($"/order/{User.Id}", forceLoad: true);
+    }
+
+    private async Task HandleAddToCart()
+    {
+
+        IActionResult response = await cartItemController.AddCartItem(Product, User.Id);
+        HttpStatusCode statusCode = (HttpStatusCode)response
+                .GetType()
+                .GetProperty("StatusCode")
+                .GetValue(response, null);
+        if (statusCode.ToString().Equals("OK"))
+        {
+            Toaster.Add("Product added to your shopping cart.", MatToastType.Success, "Product added.");
+        }
+        else
+        {
+            Toaster.Add("Product already exists in your shopping cart.", MatToastType.Danger, "Addition failed");
+        }
+    }
+}

@@ -1,0 +1,107 @@
+﻿@page "/cart/{id}"
+
+@inject NavigationManager NavigationManager
+@inject User user
+@inject Product product  
+
+
+<h1>Shopping Cart</h1>
+<hr />
+@if (cart.Count == 0)
+{
+    <span>You have no items in your cart</span>
+}
+else
+{
+    <div class="shoppingcart-container">
+        @foreach (var item in cart)
+        {
+            <div class="item-container">
+                <div class="item-image-wrapper">
+                    <img src="data:image/bmp;base64, @(Convert.ToBase64String(item.ImageData))" class="item-image" />
+                </div>
+                <div class="item-name">
+                    <h5><a @onclick="@( () => RedirectToProductPage(item.ProductId))">@item.Title</a></h5>
+                    <span>@item.Category</span><br />
+                    <button class="btn-delete" @onclick="@(async () => await HandleDelete(item))">Delete</button>
+                </div>
+                <div class="item-price">@item.Price €</div>
+            </div>
+            <hr />
+        }
+
+    <div class="item-price">
+        <MatButton Style="color:cornflowerblue " @onclick="@(async () => await RedirectToOrderPage())">Buy</MatButton>
+        Total (@cart.Count): @cart.Sum(item => item.Price) €
+    </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    List<CartItem> cart = new List<CartItem>();
+    bool clicked = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cart = await cartItemService.GetUserCartItems(Guid.Parse(Id));
+        user = await users.GetUserById(Guid.Parse(Id));
+    }
+    private async void RedirectToProductPage(Guid productId)
+    {
+        Product pr = await productService.GetProductByProductId(productId);
+        product.ProductId = pr.ProductId;
+        product.ProductUserId = pr.ProductUserId;
+        product.Title = pr.Title;
+        product.Description = pr.Description;
+        product.Category = pr.Category;
+        product.SellingType = pr.SellingType;
+        product.Price = pr.Price;
+        product.AuctionType = pr.AuctionType;
+        product.ImageData = pr.ImageData;
+        product.TimesViewed = pr.TimesViewed;
+        NavigationManager.NavigateTo($"/product/{pr.ProductId.ToString()}", forceLoad: true);
+    }
+
+    private async Task HandleDelete(CartItem cartItem)
+    {
+        Product pr = await productService.GetProductByProductId(cartItem.ProductId);
+        if(pr.SellingType == "Auction")
+        {
+            Toaster.Add("You cannot delete auction product", MatToastType.Danger, "Error");
+        }
+        else
+        {
+            await cartItemController.DeleteCartItem(cartItem);
+            cart = await cartItemService.GetUserCartItems(Guid.Parse(Id));
+        }
+
+    }
+    private async Task RedirectToOrderPage()
+    {
+        bool redirect = true;
+        foreach (var item in cart)
+        {
+            Product pr = await productService.GetProductByProductId(item.ProductId);
+            if (pr.SellingType == "Auction" && pr.AuctionType == "Auction 1")
+            {
+                DateTime endDate = pr.StartDate.AddDays(7);
+                if(DateTime.Today.CompareTo(endDate) <= 0)
+                {
+                    redirect = false;
+                    break;
+                }
+            }
+        }
+        if (redirect)
+        {
+            NavigationManager.NavigateTo($"/order/{Id}", forceLoad: true);
+        }
+        else
+        {
+            Toaster.Add("Auction has not ended", MatToastType.Danger, "Error");
+        }
+
+    }
+}

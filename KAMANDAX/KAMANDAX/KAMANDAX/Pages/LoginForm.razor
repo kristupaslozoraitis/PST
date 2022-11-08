@@ -1,0 +1,76 @@
+﻿@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Mvc;
+@using KAMANDAX.Controllers
+@using System.Net
+@using MatBlazor
+@using Services
+<div class="loginFormDiv">
+    <EditForm Model="@userModel" OnValidSubmit="@( async () => await HandleLogin())">
+        <br />
+
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <InputText @bind-Value="@userModel.EmailAdress" class="form-control" placeholder="Email Address" id="email" />
+            <ValidationMessage For="(() => userModel.EmailAdress)" />
+
+        </div>
+        <div class="mb-3">
+            <InputText type="password" @bind-Value="@userModel.Password" class="form-control" placeholder="Enter a password" id="password" />
+            <ValidationMessage For="(() => userModel.Password)" />
+        </div>
+        <a style="color: rgb(51, 51, 51); font-size: 14px; font-weight: bold; cursor: pointer;" @onclick="ShowForm">Forgot your password?</a>
+        <br />
+        <br />
+        <div>
+            <button class="btn btn-outline-info">Login</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    LoginRequest userModel = new LoginRequest();
+
+    User user = new User();
+
+    private async Task HandleLogin()
+    {
+        user = await users.GetUserByEmail(userModel.EmailAdress);
+        if(user != null)
+        {
+            await refreshService.DeleteAll(user.Id);
+        }
+        IActionResult response = await authController.Login(userModel);
+        HttpStatusCode statusCode = (HttpStatusCode)response
+                .GetType()
+                .GetProperty("StatusCode")
+                .GetValue(response, null);
+        if (statusCode.ToString().Equals("OK"))
+        {
+            RefreshToken token = await refreshService.GetByUserId(user.Id);
+            request.RefreshToken = token.Token;
+            NavigateToHomePage();
+        }
+        else
+        {
+            Toaster.Add("The email or password you entered is invalid", MatToastType.Danger, "Login failed");
+        }
+
+    }
+
+    private void NavigateToHomePage()
+    {
+        Guid id = user.Id;
+        NavigationManager.NavigateTo($"/index/{id.ToString()}", forceLoad: true);
+    }
+
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+
+    private void ShowForm()
+    {
+        ModalInstance.CloseAsync();
+        Modal.Show<PasswordResetForm>("Reset your password");
+    }
+}

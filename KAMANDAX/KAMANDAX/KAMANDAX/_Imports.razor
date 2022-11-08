@@ -1,0 +1,36 @@
+﻿@using System.Net.Http
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using KAMANDAX
+@using KAMANDAX.Shared
+@using Blazored
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using Models
+@using KAMANDAX.DB;
+@using Microsoft.AspNetCore.Mvc;
+@using KAMANDAX.Controllers
+@using System.Net
+@using MatBlazor
+@using Services
+@using Services.RefreshTokenRepositories
+@using BlazorInputFile
+@using System.IO
+@inject AuthController authController
+@inject ProductController productController
+@inject IMatToaster Toaster
+@inject RefreshRequest request
+@inject RefreshTokenService refreshService
+@inject UserService users
+@inject Product product
+@inject ProductService productService
+@inject CartItemController cartItemController
+@inject CartItemService cartItemService
+@inject CommentService commentService
+@inject OrdersService orderService
+@inject OrderInformationController orderController
+@inject NavigationManager NavigationManager

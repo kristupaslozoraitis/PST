@@ -1,0 +1,116 @@
+﻿@page "/delivery/{id}/{type}"
+
+<h1>Order delivery information</h1>
+<div class="loginFormDiv2">
+    <EditForm Model="@orderInformation" OnValidSubmit="@(async () => await HandleOrderAddition())">
+        <br />
+
+        <DataAnnotationsValidator />
+        @if (Type.Equals("courier"))
+        {
+            <div class="mb-3">
+                <p1>Receiver Email Address</p1>
+                <InputText @bind-Value="@orderInformation.ReceiverEmailAddress" class="form-control" placeholder="Email Address" id="email" />
+
+            </div>
+            <div class="mb-3">
+                <p1>Receiver Full Name</p1>
+                <InputText @bind-Value="@orderInformation.ReceiverFullName" class="form-control" placeholder="Full Name" id="Full Name" />
+            </div>
+            <div class="mb-3">
+                <p1>Receiver Phone Number</p1>
+                <InputText @bind-Value="@orderInformation.PhoneNumber" class="form-control" placeholder="Phone Number" id="pnumber" />
+            </div>
+            <div class="mb-3">
+                <p1>Receiver Home Address</p1>
+                <InputText @bind-Value="@orderInformation.ReceiverHomeAddress" class="form-control" placeholder="Home Address" id="home address" />
+            </div>
+            <div class="mb-3">
+                <p1>Receiver City</p1>
+                <InputText @bind-Value="@orderInformation.ReceiverCity" class="form-control" placeholder="City" id="city" />
+            </div>
+            <div class="mb-3">
+                <p1>Receiver Country</p1>
+                <InputText @bind-Value="@orderInformation.ReceiverCountry" class="form-control" placeholder="Country" id="country" />
+            </div>
+        }
+        else if (Type.Equals("terminal"))
+        {
+            <div class="mb-3">
+                <p1>Receiver Email Address</p1>
+                <InputText @bind-Value="@orderInformation.ReceiverEmailAddress" class="form-control" placeholder="Email Address" id="email" />
+
+            </div>
+            <div class="mb-3">
+                <p1>Receiver Full Name</p1>
+                <InputText @bind-Value="@orderInformation.ReceiverFullName" class="form-control" placeholder="Full Name" id="Full Name" />
+            </div>
+            <div class="mb-3">
+                <p1>Receiver Phone Number</p1>
+                <InputText @bind-Value="@orderInformation.PhoneNumber" class="form-control" placeholder="Phone Number" id="pnumber" />
+                <br />
+                <MatSelect Label="Select terminal address" @bind-Value="@orderInformation.TerminalAddress" FullWidth="true" Id="selectTerminalAddress">
+                    <MatOptionString></MatOptionString>
+                    @foreach (string terminal in terminalAddresses)
+                        {
+                        <MatOptionString Value="@terminal">@terminal</MatOptionString>
+                        }
+                </MatSelect>
+            </div>
+        }
+        <div class="price" style="font-size:large;text-align:right;">
+            <p>Delivery price: @orderInformation.DeliveryPrice €</p>
+        </div>
+        <MatButton Style="color:cornflowerblue">Next</MatButton>
+
+    </EditForm>
+
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    [Parameter]
+    public string Type { get; set; }
+
+    User userModel = new User();
+    UserRequest userRequest = new UserRequest();
+    OrderInformation orderInformation = new OrderInformation();
+    List<string> terminalAddresses = new List<string>();
+
+    protected async override Task OnInitializedAsync()
+    {
+        orderInformation = await orderService.GetOrder(Guid.Parse(Id));
+        terminalAddresses = orderService.getTerminalAddresses(orderInformation);
+    }
+
+    private async Task HandleOrderAddition()
+    {
+        orderInformation.TotalPrice = orderInformation.TotalPrice + orderInformation.DeliveryPrice;
+        await orderService.UpdateOrder(orderInformation, orderInformation.OrderID);
+        RedirectToCheckOutPage();
+    }
+
+
+    private void RedirectToCheckOutPage()
+    {
+        string type = "";
+        if (orderInformation.PaymentType.Contains("MasterCard"))
+        {
+            type = "MasterCard";
+            NavigationManager.NavigateTo($"/checkout/{Id}/{type}", forceLoad: true);
+        }
+        else if(orderInformation.PaymentType.Contains("VISA"))
+        {
+            type = "VISA";
+            NavigationManager.NavigateTo($"/checkout/{Id}/{type}", forceLoad: true);
+        }
+
+        else
+        {
+            type = "Cash";
+            NavigationManager.NavigateTo($"/fullorder/{Id}/{orderInformation.DeliveryType}/{type}", forceLoad: true);
+        }
+    }
+
+}

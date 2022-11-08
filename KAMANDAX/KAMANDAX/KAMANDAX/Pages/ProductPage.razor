@@ -1,0 +1,276 @@
+﻿@page "/product/{id}/{uid}"
+@inject Product product
+@inject User user
+@inject List<Product> products
+@inject NavigationManager NavigationManager
+
+<div class="container" style="margin: auto; position: relative; width:50%; padding-top: 50px; display: flex; height: 500px;align-items:center">
+    <div class="image-container" style="flex-basis: 40%;margin-right:80px;border-style:solid;border-width:1px;">
+        <img style="min-height: 300px;" src="data:image/bmp;base64, @(Convert.ToBase64String(product.ImageData))" width="500" height="500" />
+    </div>
+    <div class="product-info" style="padding-left: 20px;">
+        <h1>@product.Title</h1>
+        <hr />
+        @if (product.TimesViewed == 1)
+        {
+            <h6>Product was viewed <b>1</b> time.</h6>
+        }
+        else
+        {
+            <h6>Product was viewed <b>@product.TimesViewed</b> times.</h6>
+        }
+        <hr />
+        <p>Category: @product.Category</p>
+        <hr />
+        <div class="description" style="height: 150px;">
+            <p>@product.Description</p>
+        </div>
+        <hr />
+        <div class="order-container" style="min-width: 300px; display:flex;flex-wrap:nowrap;align-items: center;">
+            <div class="price" style="margin:10px;width: 300px;align-items:center">
+                <p style="font-size:20px; white-space:nowrap">Price: @product.Price €</p>
+            </div>
+            @if (product.SellingType == "Auction" && product.AuctionType == "Auction 1")
+            {
+                DateTime temp2 = product.StartDate;
+                temp2.AddDays(7);
+                if (product.SellingType == "Auction" && product.AuctionType == "Auction 1" && DateTime.Today.CompareTo(temp2) >= 0)
+                {
+
+                    int newPrice = Convert.ToInt32(product.Price + 1);
+                    //v5 = newPrice;
+
+                    string typeMsg = String.Format("min price is: {0}", newPrice);
+
+                    <MatNumericUpDownField Label="@typeMsg"
+                                           @bind-Value="@v5">
+                    </MatNumericUpDownField>
+
+                    if (newPrice <= v5)
+                    {
+                        <MatButton Style="color:cornflowerblue " @onclick="@(async () => await HandleBid(v5))">Bid</MatButton>
+                    }
+
+                }
+                else
+                {
+                    <MatButton Style="color:cornflowerblue " @onclick="@(async () => await HandleAddToCart())">Add to cart</MatButton>
+                }
+            }
+            else
+            {
+                if (product.ProductUserId == Guid.Parse(Uid)) { }
+                else
+                {
+                <div class="btn" style="width: 100%;text-align: right;margin-right: 10px;">
+                    <button type="button" class="btn btn-outline-info" @onclick="@(async () => await HandleAddToCart())">Add to cart</button>
+                </div>
+                }
+            }
+        </div>
+        <hr />
+        <div class="payment" style="display:flex;align-items:center">
+            <p style="margin:0;white-space:nowrap">Payment:</p>
+            <img src="https://www.merchantequip.com/image/?logos=m&height=32" alt="Merchant Equipment Store Credit Card Logos" />
+            <img src="https://www.merchantequip.com/image/?logos=v|me&height=32" alt="Merchant Equipment Store Credit Card Logos" />
+        </div>
+        <div class="delivery" style="display:flex;align-items:center">
+            <p style="margin:0;white-space:nowrap">Delivery:</p>
+            <img src="/images/lietuvos_pastas.png" width="38" height="32" />
+            <img src="/images/omniva.png" width="38" height="32" />
+            <img src="/images/dpd-dynamic-parcel-distribution-logo-vector-11573947304izmaowfbia.png" width="38" height="32" />
+        </div>
+    </div>
+</div>
+<div class="suggestion-container">
+    <h3>Also suggesting:</h3>
+    @foreach (var moreproduct in productss)
+    {
+        @*        <div class="column">*@
+        <img class="sugg-img" src="data:image/bmp;base64, @(Convert.ToBase64String(moreproduct.ImageData))" style="width:200px;height:200px" @onclick="() => RedirectToProductPage(moreproduct)" />
+        @*        </div>*@
+    }
+</div>
+
+<hr />
+<h3 style="text-align: center; margin-bottom: 20px">Feedback</h3>
+
+<section class="content-item" id="comments">
+    <div class="container" data-mdb-perfect-scrollbar='true'>
+        <div class="row">
+            <div class="col-sm-8 overflow-scroll" style="margin: 0 auto">
+                <form>
+                    <h3 class="pull-left">New Comment</h3>
+
+                    <fieldset>
+                        <div class="row">
+
+                            <div class="form-group col-xs-12 col-sm-9 col-lg-10">
+                                <textarea class="form-control" id="message" placeholder="Your message" required="" @bind="@theComment"></textarea>
+                            </div>
+
+                        </div>
+                    </fieldset>
+                    <button type="button" class="btn btn-outline-info" @onclick="@(async () => await HandleAddComment())">Submit</button>
+
+                </form>
+
+                @if (comments.Count == 1)
+                {
+                    <h3>1 comment</h3>
+                }
+                else
+                {
+                   <h3>@comments.Count comments</h3>
+                }
+                <div class="scroll" style="height:300px">
+                    @foreach (Comment comment in comments)
+                    {
+                        <FeedbackCard Name="@comment.Name" Data="@comment.Data" />
+                    }
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    [Parameter]
+    public string Uid { get; set; }
+
+@*    [Parameter]
+    public Product Product { get; set; }*@
+
+    public List<Product> productss = new List<Product>();
+
+    public RefreshToken rtoken { get; set; }
+
+    public List<Comment> comments = new List<Comment>();
+
+    protected async override Task OnInitializedAsync()
+    {
+        await productService.UpdateProductViewedCount(Guid.Parse(Id));
+        products = await productService.GetProducts();
+        string token = request.RefreshToken;
+        rtoken = await refreshService.GetByToken(token);
+        IActionResult response = await authController.Refresh(request);
+        user = await users.GetUserById(rtoken.UserId);
+        rtoken = await refreshService.GetByUserId(user.Id);
+        request.RefreshToken = rtoken.Token;
+        productss = products.Where(u => u.ProductId != Guid.Parse(Id)).Take(4).ToList();
+        comments = await commentService.GetProductComments(Guid.Parse(Id));
+    }
+
+    private void RedirectToProductPage(Product moreProduct)
+    {
+        product.ProductId = moreProduct.ProductId;
+        product.ProductUserId = moreProduct.ProductUserId;
+        product.Title = moreProduct.Title;
+        product.Description = moreProduct.Description;
+        product.Category = moreProduct.Category;
+        product.SellingType = moreProduct.SellingType;
+        product.Price = moreProduct.Price;
+        product.AuctionType = moreProduct.AuctionType;
+        product.ImageData = moreProduct.ImageData;
+        product.TimesViewed = moreProduct.TimesViewed;
+        NavigationManager.NavigateTo($"/product/{moreProduct.ProductId}/{Uid}", forceLoad: true);
+    }
+
+    private async Task HandleAddToCart()
+    {
+
+        IActionResult response = await cartItemController.AddCartItem(product, user.Id);
+        HttpStatusCode statusCode = (HttpStatusCode)response
+                .GetType()
+                .GetProperty("StatusCode")
+                .GetValue(response, null);
+        if (statusCode.ToString().Equals("OK"))
+        {
+            Toaster.Add("Product added to your shopping cart.", MatToastType.Success, "Product added.");
+        }
+        else
+        {
+            Toaster.Add("Product already exists in your shopping cart.", MatToastType.Danger, "Addition failed");
+        }
+    }
+
+    string theComment = "";
+
+    private async Task HandleAddComment()
+    {
+        if(theComment != "")
+        {
+            Comment comment = new Comment()
+            {
+                Id = new Guid(),
+                Name = user.FullName,
+                Data = theComment,
+                ProductId = product.ProductId
+            };
+            await commentService.Create(comment);
+            theComment = "";
+            comments = await commentService.GetProductComments(Guid.Parse(Id));
+        }
+
+    }
+
+    int v5;
+    string ButtonState = "";
+
+    void Click(MouseEventArgs e)
+    {
+        ButtonState = "Clicked";
+        //v5 += 1;
+    }
+
+    private async Task HandleBid(decimal BidValue)
+    {
+        product.Price = v5;
+        Product prod = await productService.GetProductByProductId(Guid.Parse(Id));
+        List<CartItem> cart = await cartItemController.GetUserCartItems(prod.OrderedBy);
+        if (prod.OrderedBy != user.Id)
+        {
+            foreach (CartItem cartItem in cart)
+            {
+                if (cartItem.ProductId.Equals(product.ProductId))
+                {
+                    await cartItemController.DeleteCartItem(cartItem);
+                }
+            }
+        }
+
+
+        ProductRequest RProduct = new ProductRequest();
+        IActionResult response = await cartItemController.AddCartItem(product, user.Id);
+        HttpStatusCode statusCode = (HttpStatusCode)response
+                .GetType()
+                .GetProperty("StatusCode")
+                .GetValue(response, null);
+        if (statusCode.ToString().Equals("OK"))
+        {
+            RProduct.Title = product.Title;
+            RProduct.Description = product.Description;
+            RProduct.Category = product.Category;
+            RProduct.SellingType = product.SellingType;
+            RProduct.Price = product.Price;
+            RProduct.AuctionType = product.AuctionType;
+            RProduct.ImageData = product.ImageData;
+            RProduct.ProductBuyerID = user.Id;
+            RProduct.Price = v5;
+            RProduct.StartDate = product.StartDate;
+
+            await productController.EditProduct(RProduct, product.ProductId, product.ProductUserId);
+            Toaster.Add("Product added to your shopping cart.", MatToastType.Success, "Product added.");
+        }
+        else
+        {
+            Toaster.Add("No one bid more than you", MatToastType.Danger, "Error");
+        }
+        product = await productService.GetProductByProductId(Guid.Parse(Id));
+    }
+
+}

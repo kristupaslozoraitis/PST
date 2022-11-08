@@ -1,0 +1,174 @@
+﻿@page "/order/{id}"
+@inject Product product
+@inject User user
+@inject List<Product> products
+@inject NavigationManager NavigationManager
+@inject OrderInformationController orderController
+
+
+<h1 class="centerH1">Order personal information</h1>
+<div class="loginFormDiv2">
+    <EditForm Model="@userRequest" OnValidSubmit="@(async () => await HandleOrderAddition())">
+        <br />
+
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <p1>Email Address</p1>
+            <InputText @bind-Value="@userRequest.Email" class="form-control" placeholder="Email Address" id="email" />
+            <ValidationMessage For="(() => userRequest.Email)" />
+
+        </div>
+        <div class="mb-3">
+            <p1>Full Name</p1>
+            <InputText @bind-Value="@userRequest.FullName" class="form-control" placeholder="Full Name" id="Full Name" />
+            <ValidationMessage For="(() => userRequest.FullName)" />
+
+        </div>
+
+        <div class="mb-3">
+            <p1>Home Address</p1>
+            <InputText @bind-Value="@userRequest.Address" class="form-control" placeholder="Home Address" id="home address" />
+            <ValidationMessage For="(() => userRequest.Address)" />
+        </div>
+        <div class="mb-3">
+            <p1>City</p1>
+            <InputText @bind-Value="@userRequest.City" class="form-control" placeholder="City" id="city" />
+            <ValidationMessage For="(() => userRequest.City)" />
+        </div>
+        <div class="mb-3">
+            <p1>Country</p1>
+            <InputText @bind-Value="@userRequest.Country" class="form-control" placeholder="Country" id="country" />
+            <ValidationMessage For="(() => userRequest.Country)" />
+        </div>
+        <div class="mb-3">
+            <p1>Postal Code</p1>
+            <InputText @bind-Value="@userRequest.PostalCode" class="form-control" placeholder="Postal Code" id="postal code" />
+            <ValidationMessage For="(() => userRequest.PostalCode)" />
+        </div>
+
+        <MatAccordion Multi="true">
+            <MatExpansionPanel Id="deliveryDiv">
+                <MatExpansionPanelSummary>
+                    <MatExpansionPanelHeader>Delivery types</MatExpansionPanelHeader>
+                </MatExpansionPanelSummary>
+                <MatRadioGroup @bind-Value="@orderInformation.DeliveryType" , TValue="string">
+                    <MatExpansionPanelDetails>
+                        <MatRadioButton TValue="string" Value="@("LPTerminal")" Id="male">LP EXPRESS self service terminal  1,49 €</MatRadioButton>
+                    </MatExpansionPanelDetails>
+                    <MatExpansionPanelDetails>
+                        <MatRadioButton TValue="string" Value="@("LPcourier")" Id="female">LP EXPRESS courier  2,90 €</MatRadioButton>
+                    </MatExpansionPanelDetails>
+                    <MatExpansionPanelDetails>
+                        <MatRadioButton TValue="string" Value="@("OMNIVATerminal")" Id="other">OMNIVA self service terminal  1,49 €</MatRadioButton>
+                    </MatExpansionPanelDetails>
+                    <MatExpansionPanelDetails>
+                        <MatRadioButton TValue="string" Value="@("OMNIVAcourier")" Id="other">OMNIVA courier  2,90 €</MatRadioButton>
+                    </MatExpansionPanelDetails>
+                    <MatExpansionPanelDetails>
+                        <MatRadioButton TValue="string" Value="@("DPDTerminal")" Id="other">DPD self service terminal  1,49 €</MatRadioButton>
+                    </MatExpansionPanelDetails>
+                    <MatExpansionPanelDetails>
+                        <MatRadioButton TValue="string" Value="@("DPDcourier")" Id="other">DPD courier  2,90 €</MatRadioButton>
+                    </MatExpansionPanelDetails>
+                </MatRadioGroup>
+            </MatExpansionPanel>
+        </MatAccordion>
+        <br />
+        <MatAccordion Multi="true">
+            <MatExpansionPanel Id="paymentDiv">
+                <MatExpansionPanelSummary>
+                    <MatExpansionPanelHeader>Payment types</MatExpansionPanelHeader>
+                </MatExpansionPanelSummary>
+                <MatRadioGroup @bind-Value="@orderInformation.PaymentType" , TValue="string">
+                    <MatExpansionPanelDetails>
+                        <MatRadioButton TValue="string" Value="@("MasterCard")" Id="male">MasterCard</MatRadioButton>
+                    </MatExpansionPanelDetails>
+                    <MatExpansionPanelDetails>
+                        <MatRadioButton TValue="string" Value="@("VISA")" Id="female">VISA</MatRadioButton>
+                    </MatExpansionPanelDetails>
+                    <MatExpansionPanelDetails>
+                        <MatRadioButton TValue="string" Value="@("Cash")" Id="other">By cash</MatRadioButton>
+                    </MatExpansionPanelDetails>
+                </MatRadioGroup>
+            </MatExpansionPanel>
+        </MatAccordion>
+
+        <MatButton Style="color:cornflowerblue ">Next</MatButton>
+
+    </EditForm>
+
+
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    User userModel = new User();
+    UserRequest userRequest = new UserRequest();
+    PasswordRequest passwordRequest = new PasswordRequest();
+    OrderInformation orderInformation = new OrderInformation();
+    List<CartItem> cart = new List<CartItem>();
+
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        userModel = await users.GetUserById(Guid.Parse(Id));
+
+        userRequest.FullName = userModel.FullName;
+        userRequest.Email = userModel.Email;
+        userRequest.Address = userModel.Address;
+        userRequest.City = userModel.City;
+        userRequest.Country = userModel.Country;
+        userRequest.PostalCode = userModel.PostalCode;
+
+        cart = await cartItemService.GetUserCartItems(Guid.Parse(Id));
+    }
+
+    private async Task HandleOrderAddition()
+    {
+        orderInformation.userID = userModel.Id;
+        orderInformation.EmailAddress = userRequest.Email;
+        orderInformation.FullName = userRequest.FullName;
+        orderInformation.HomeAddress = userRequest.Address;
+        orderInformation.City = userRequest.City;
+        orderInformation.Country = userRequest.Country;
+        orderInformation.PostalCode = userRequest.PostalCode;
+        orderInformation.TotalPrice = cart.Sum(s => s.Price);
+
+        if (orderInformation.DeliveryType == null || orderInformation.PaymentType == null)
+        {
+            Toaster.Add("All fields must be filled", MatToastType.Danger, "Error");
+        }
+        else
+        {
+            if (orderInformation.DeliveryType.Contains("courier"))
+            {
+                orderInformation.DeliveryPrice = 2.90;
+            }
+            else
+            {
+                orderInformation.DeliveryPrice = 1.49;
+            }
+            await orderController.AddOrderItem(orderInformation);
+            RedirectToDeliveryPage();
+        }
+    }
+
+    private void RedirectToDeliveryPage()
+    {
+        string type = "";
+        if (orderInformation.DeliveryType.Contains("courier"))
+        {
+            type = "courier";
+            NavigationManager.NavigateTo($"/delivery/{Id}/{type}", forceLoad: true);
+        }
+        else if (orderInformation.DeliveryType.Contains("Terminal"))
+        {
+            type = "terminal";
+            NavigationManager.NavigateTo($"/delivery/{Id}/{type}", forceLoad: true);
+        }
+    }
+
+}

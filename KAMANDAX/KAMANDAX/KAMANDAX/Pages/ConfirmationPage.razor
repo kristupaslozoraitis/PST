@@ -1,0 +1,201 @@
+﻿@using System.Net.Mail;
+@page "/fullorder/{id}/{type}/{type1}"
+
+<div class="fullOrderMainDiv">
+    <div class="fullOrderDeliveryDiv">
+        <label><b>Receiver Full Name</b></label>
+        <p>@orderInformation.ReceiverFullName</p>
+        <label><b>Receiver Email Address</b></label>
+
+        <p>@orderInformation.ReceiverEmailAddress</p>
+        <label><b>Receiver Phone Number</b></label>
+
+        <p>@orderInformation.PhoneNumber</p>
+
+        @if (Type.Contains("Terminal"))
+        {
+            <label><b>Delivery Type</b></label>
+            <p>@orderInformation.DeliveryType</p>
+            <label><b>Terminal Address</b></label>
+
+            <p>@orderInformation.TerminalAddress</p>
+        }
+
+        else {
+        <label><b>Delivery Type</b></label>
+        <p>@orderInformation.DeliveryType</p>
+        <label><b>Delivery Address</b></label>
+
+        <p>@orderInformation.ReceiverHomeAddress</p>
+        }
+
+    </div>
+    <br>
+    <div class="fullOrderPaymentDiv">
+        @if (Type1.Contains("Cash"))
+        {
+            if (Type.Contains("Terminal"))
+            {
+                <label><b>You will have to pay at terminal</b></label>
+            }
+            else
+            {
+                <label><b>You will have to pay to courier</b></label>
+            }
+
+        }
+        else
+        {
+            <label><b>Card Holder</b></label>
+
+            <p>@orderInformation.CardHolder</p>
+            <label><b>Holder Card Number</b></label>
+
+            <p>@tmp</p>
+        }
+
+    </div>
+</div>
+
+<br>
+<br>
+<br>
+<br>
+
+<div class="shoppingcart-container">
+    @foreach (var item in cart)
+    {
+        <div class="item-container">
+            <div class="item-image-wrapper">
+                <img src="data:image/bmp;base64, @(Convert.ToBase64String(item.ImageData))" class="item-image" />
+            </div>
+            <div class="item-name">
+                <h5><a>@item.Title</a></h5>
+                <span>@item.Category</span><br />
+            </div>
+            <div class="item-price">@item.Price €</div>
+        </div>
+        <hr />
+    }
+</div>
+
+<div class="item-price">
+    <MatButton Style="color:cornflowerblue " @onclick="@(async () => await SubmitOrder())">Confirm</MatButton>
+    Total (@cart.Count): @orderInformation.TotalPrice €
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    [Parameter]
+    public string Type { get; set; }
+    [Parameter]
+    public string Type1 { get; set; }
+
+    OrderInformation orderInformation = new OrderInformation();
+    List<CartItem> cart = new List<CartItem>();
+    List<OrderedProducts> orderedProducts = new List<OrderedProducts>();
+    public string tmp = "";
+    public int index = 0;
+
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        orderInformation = await orderService.GetOrder(Guid.Parse(Id));
+        if (!Type1.Contains("Cash"))
+        {
+            for (int i = 0; i < orderInformation.CardNumber.Length - 4; i++)
+            {
+                tmp = tmp + "• ";
+                index = i;
+            }
+            for (int i = index; i < orderInformation.CardNumber.Length; i++)
+            {
+                tmp = tmp + orderInformation.CardNumber[i];
+            }
+        }
+
+
+
+        cart = await cartItemService.GetUserCartItems(Guid.Parse(Id));
+        foreach (var item in cart)
+        {
+            OrderedProducts temp = new OrderedProducts();
+            temp.OrderedProductID = new Guid();
+            temp.Title = item.Title;
+            temp.Category = item.Category;
+            temp.ImageData = item.ImageData;
+            temp.OrderID = orderInformation.OrderID;
+            temp.Price = item.Price;
+            orderedProducts.Add(temp);
+        }
+    }
+
+    private async Task SubmitOrder()
+    {
+        orderInformation.ConfirmedOrder = true;
+        orderInformation.OrderDate = DateTime.Today;
+        await orderService.UpdateOrder(orderInformation, orderInformation.OrderID);
+        foreach (var item in orderedProducts)
+        {
+            await orderService.CreateOrderedProducts(item);
+        }
+        await SendSuccessEmail();
+        NavigateToHomePage();
+
+    }
+
+    private void NavigateToHomePage()
+    {
+        NavigationManager.NavigateTo($"/index/{Id}");
+    }
+
+
+    private async Task SendSuccessEmail()
+    {
+        //Buyer's cart items
+        List<CartItem> userCartItems = await cartItemController.GetUserCartItems(orderInformation.userID);
+        string textBody = " <table  style=\"text-align:center;\" border=" + 1 + " cellpadding=" + 0 + " cellspacing=" + 0 + " width = " + 400 + "><tr bgcolor='#4da6ff'><td><b> Product</b></td> <td> <b> Cost</b> </td></tr>";
+        string deliveryAddress;
+        if (orderInformation.DeliveryType == "LPTerminal") deliveryAddress = orderInformation.TerminalAddress + ", " + "LP terminal";
+        else if (orderInformation.DeliveryType == "OMNIVATerminal") deliveryAddress = orderInformation.TerminalAddress + ", " + "OMINVA terminal";
+        else if (orderInformation.DeliveryType == "DPDTerminal") deliveryAddress = orderInformation.TerminalAddress + ", " + "DPD terminal";
+        else deliveryAddress = orderInformation.ReceiverHomeAddress + ", " + orderInformation.ReceiverCity + ", " + orderInformation.ReceiverCountry;
+
+        foreach (CartItem item in userCartItems)
+        {
+            textBody += "<tr><td>" + item.Title + "</td><td> " + item.Price + "€</td> </tr>";
+        }
+        textBody += "</table>";
+        string buyerEmail = orderInformation.ReceiverEmailAddress;
+        using (MailMessage mail = new MailMessage())
+        {
+            mail.From = new MailAddress("kamandaax@gmail.com");
+            mail.To.Add(buyerEmail);
+            mail.Subject = $"🤩 Your order is completed 🤩. Order ID: {orderInformation.OrderID} | KAMANDAX";
+            mail.IsBodyHtml = true;
+            mail.Body = $@"<html style='color:black;'>
+                  <body>
+                  <p style='color:black;'>Hello, {orderInformation.ReceiverFullName},</p>
+                  <p style='color:black;'>Your order is done, and is on it's way!</p>
+                    {textBody}
+                   <p>Total price: <b>{orderInformation.TotalPrice}€</b></p>
+                   <p>Delivery address: <b>{deliveryAddress}</b>.</p>
+                  <p>Date of order: <b>{DateTime.Now}</b>. </p>
+                  <p>Sincerely,<br>KAMANDA-X</br></p>
+                  </body>
+                  </html>
+                 ";
+            using (SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587))
+            {
+                smtp.Credentials = new System.Net.NetworkCredential("kamandaax", "kamandax123");
+                smtp.EnableSsl = true;
+                smtp.Send(mail);
+            }
+        }
+
+        // After  successful order, deleting user's cart items.
+        await cartItemController.DeleteAllUserItems(Guid.Parse(Id));
+    }
+}

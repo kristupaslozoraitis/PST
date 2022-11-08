@@ -1,0 +1,188 @@
+﻿@page "/ProfilePage/{id}"
+@using KAMANDAX.Pages
+@inject NavigationManager NavigationManager
+@inject User user
+
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
+
+<div class="card-body">
+    <EditForm Model="@passwordRequest" OnValidSubmit="@( async () => await HandleUserEditPassword())">
+        <h6 class="heading-small text-muted mb-4">User information</h6>
+        <DataAnnotationsValidator />
+        <div class="pl-lg-4">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group focused">
+                        <label class="form-control-label" for="input-email">Email address</label>
+                        <InputText type="email" id="input-email" class="form-control form-control-alternative" placeholder="Email address" disabled="true" @bind-Value="passwordRequest.Email" />
+                        <ValidationMessage For="(() => passwordRequest.Email)" />
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="form-control-label" for="input-name">Your Full Name</label>
+                        <InputText type="text" id="input-username" class="form-control form-control-alternative" placeholder="Full name" disabled="true" @bind-Value="passwordRequest.FullName" />
+                        <ValidationMessage For="(() => passwordRequest.FullName)" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group focused">
+                        <label class="form-control-label" for="input-first-name">Password</label>
+                        <InputText type="password" id="input-first-name" class="form-control form-control-alternative" placeholder="Enter new password" @bind-Value="passwordRequest.newPassword" />
+                        <ValidationMessage For="(() => passwordRequest.newPassword)" />
+
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-group focused">
+                        <label class="form-control-label" for="input-last-name">Repeat password</label>
+                        <InputText type="password" id="input-last-name" class="form-control form-control-alternative" placeholder="Repeat your new password" @bind-Value="passwordRequest.repeatedPassword" />
+                        <ValidationMessage For="(() => passwordRequest.repeatedPassword)" />
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="form-group focused">
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+
+    
+
+    <hr class="my-4">
+    <EditForm Model="@userRequest" OnValidSubmit="@( async () => await HandleAddContactInformation())">
+
+        <DataAnnotationsValidator />
+        <!-- Address -->
+        <h6 class="heading-small text-muted mb-4">Contact information</h6>
+        <div class="pl-lg-4">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group focused">
+                        <label class="form-control-label" for="input-address">Address</label>
+                        <InputText id="input-address" class="form-control form-control-alternative" placeholder="Home Address" type="text" @bind-Value="userRequest.Address" />
+                        <ValidationMessage For="(() => userRequest.Address)" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="form-group focused">
+                        <label class="form-control-label" for="input-city">City</label>
+                        <InputText type="text" id="input-city" class="form-control form-control-alternative" placeholder="City" @bind-Value="userRequest.City" />
+                        <ValidationMessage For="(() => userRequest.City)" />
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="form-group focused">
+                        <label class="form-control-label" for="input-country">Country</label>
+                        <InputText type="text" id="input-country" class="form-control form-control-alternative" placeholder="Country" @bind-Value="userRequest.Country" />
+                        <ValidationMessage For="(() => userRequest.Country)" />
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <label class="form-control-label" for="input-country">Postal code</label>
+                        <InputText type="text" id="input-postal-code" class="form-control form-control-alternative" placeholder="Postal code" @bind-Value="userRequest.PostalCode" />
+                        <ValidationMessage For="(() => userRequest.PostalCode)" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="form-group focused">
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </div>
+        </div>
+
+    </EditForm>
+    <hr class="my-4">
+
+    <button @onclick="async () => await HandleDelete()" class="btn btn-danger">Delete my profile</button>
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    public string repeatedPassword = "";
+    public string newPassword = "";
+    User userModel = new User();
+    UserRequest userRequest = new UserRequest();
+    PasswordRequest passwordRequest = new PasswordRequest();
+
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        userModel = await users.GetUserById(Guid.Parse(Id));
+        passwordRequest.FullName = userModel.FullName;
+        passwordRequest.Email = userModel.Email;
+        userRequest.Password = userModel.Password;
+        userRequest.FullName = userModel.FullName;
+        userRequest.Email = userModel.Email;
+        userRequest.Address = userModel.Address;
+        userRequest.Country = userModel.Country;
+        userRequest.City = userModel.City;
+        userRequest.PostalCode = userModel.PostalCode;
+    }
+
+    private async Task HandleUserEditPassword()
+    {
+        if(passwordRequest.repeatedPassword == passwordRequest.newPassword)
+        {
+            userRequest.FullName = userModel.FullName;
+            userRequest.Email = userModel.Email;
+            userRequest.Address = userModel.Address;
+            userRequest.Country = userModel.Country;
+            userRequest.City = userModel.City;
+            userRequest.PostalCode = userModel.PostalCode;
+            userRequest.Password = passwordRequest.newPassword;
+
+            await users.EditUser(userRequest, Guid.Parse(Id));
+            Toaster.Add("The password is correct", MatToastType.Success, "Password is changed");
+            await Task.Delay(1000);
+            NavigationManager.NavigateTo($"/ProfilePage/{Id}", forceLoad: true);
+        }
+
+        else
+        {
+            Toaster.Add("The password is incorrect", MatToastType.Danger, "Password is not changed");
+
+        }
+
+
+    }
+
+
+    private async Task HandleAddContactInformation()
+    {
+        await users.EditUser(userRequest, Guid.Parse(Id));
+        Toaster.Add("Contact information is updated", MatToastType.Success, "Updated");
+        await Task.Delay(1000);
+        NavigationManager.NavigateTo($"/ProfilePage/{Id}", forceLoad: true);
+
+    }
+
+
+    public async Task HandleDelete()
+    {
+        await productService.DeleteAllProducts(Guid.Parse(Id));
+        await refreshService.DeleteAll(Guid.Parse(Id));
+        await users.Delete(Guid.Parse(Id));
+        NavigationManager.NavigateTo("", forceLoad: true);
+
+    }
+
+
+}

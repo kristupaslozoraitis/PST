@@ -1,0 +1,50 @@
+﻿@page "/orders/{id}"
+
+
+<MatAccordion Multi="true">
+    @foreach(var item in orderInformation)
+    {
+        <MatExpansionPanel>
+            <MatExpansionPanelSummary>
+                <MatExpansionPanelHeader Class="orderTableWidth">Order: <b>@item.OrderID</b>  @item.OrderDate.ToString("MM/dd/yyyy") @item.TotalPrice €</MatExpansionPanelHeader>
+            </MatExpansionPanelSummary>
+            <MatExpansionPanelDetails>
+                <p>Products:</p>
+                @foreach (var item1 in orderedProducts.Where(x => x.OrderID == item.OrderID).ToList())
+                {
+                    <div class="item-container">
+                        <div class="item-image-wrapper">
+                            <img src="data:image/bmp;base64, @(Convert.ToBase64String(item1.ImageData))" class="item-image" />
+                        </div>
+                        <div class="item-name">
+                            <h5>@item1.Title</h5>
+                            <span>@item1.Category</span><br />
+                        </div>
+                        <div class="item-price">@item1.Price €</div>
+                    </div>
+                }
+            </MatExpansionPanelDetails>
+        </MatExpansionPanel>
+        <br>
+    }
+
+</MatAccordion>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+
+    List<OrderInformation> orderInformation = new List<OrderInformation>();
+    List<OrderedProducts> orderedProducts = new List<OrderedProducts>();
+    List<OrderedProducts> separatedProducts = new List<OrderedProducts>();
+    List<CartItem> cart = new List<CartItem>();
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        orderInformation = await orderService.GetOrdersByUserID(Guid.Parse(Id));
+        orderedProducts = await orderService.GetOrderedProducts();
+    }
+
+}

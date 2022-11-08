@@ -1,0 +1,137 @@
+﻿@inject NavigationManager NavigationManager
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" @onclick="@(async () => await NavigateToMain())" style="cursor:pointer;">
+        <img src="images/logoKX.png" width="40" height="40" alt="">
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto" style="position:absolute;">
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" @onclick="@(async () => await NavigateToMain())">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="homeLogo" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M2 13.5V7h1v6.5a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V7h1v6.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5zm11-11V6l-2-2V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5z" />
+                        <path fill-rule="evenodd" d="M7.293 1.5a1 1 0 0 1 1.414 0l6.647 6.646a.5.5 0 0 1-.708.708L8 2.207 1.354 8.854a.5.5 0 1 1-.708-.708L7.293 1.5z" />
+                    </svg> Home
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" @onclick="@(async () => await NavigateToProducts())">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="productsLogo" viewBox="0 0 16 16">
+                        <path d="M0 3a2 2 0 0 1 2-2h13.5a.5.5 0 0 1 0 1H15v2a1 1 0 0 1 1 1v8.5a1.5 1.5 0 0 1-1.5 1.5h-12A2.5 2.5 0 0 1 0 12.5V3zm1 1.732V12.5A1.5 1.5 0 0 0 2.5 14h12a.5.5 0 0 0 .5-.5V5H2a1.99 1.99 0 0 1-1-.268zM1 3a1 1 0 0 0 1 1h12V2H2a1 1 0 0 0-1 1z" />
+                    </svg> Your products
+                </NavLink>
+            </li>
+        </ul>
+        @*<div class="socialMedia">
+            <div class="instagramDiv">
+                <a href="https://www.instagram.com/ktuspace/" target="_blank">
+                    <img class="instagramLogo" src="https://freeiconshop.com/wp-content/uploads/edd/instagram-new-color-flat.png" />
+                </a>
+            </div>
+            <div class="facebookDiv">
+                <a href="https://www.facebook.com/ktu.lt/" target="_blank">
+                    <img class="facebookLogo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Facebook_f_logo_%282019%29.svg/1365px-Facebook_f_logo_%282019%29.svg.png" />
+                </a>
+            </div>
+            <div class="youtubeDiv">
+                <a href="https://www.youtube.com/user/ktuvideo" target="_blank">
+                    <img class="youtubeLogo" src="https://upload.wikimedia.org/wikipedia/commons/a/a0/YouTube_social_red_circle_%282017%29.svg" />
+                </a>
+            </div>
+        </div>*@
+
+        <div class="cartDiv">
+            <button type="button" id="cartBtn" class="btn btn-outline-info" @onclick="@( async () => await NavigateToShoppingCart())">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart" viewBox="0 0 16 16">
+                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
+                </svg>
+                Shopping cart
+            </button>
+        </div>
+
+        <div class="profileDiv">
+                <img class="profileLogo" src="/images/profileLogo.png" data-toggle="dropdown"/>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown" style="min-width:120px;" >
+                <ul class="dropdown-item" id="profile-item" @onclick="@(async () => await NavigateToProfilePage())">My Profile</ul>
+                <hr class="divider"/>
+                <ul class="dropdown-item" id="profile-item" @onclick="@(async () => await NavigateToOrdersPage())">My Orders</ul>
+                <hr class="divider"/>
+                <ul class="dropdown-item" id="profile-item" @onclick="@(async () => await HandleLogout())">Sign Out</ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+    
+
+
+@code {
+
+    User user = new User();
+
+    private async Task HandleRefresh(string page)
+    {
+
+        string token = request.RefreshToken;
+        RefreshToken rtoken = await refreshService.GetByToken(token);
+        IActionResult response = await authController.Refresh(request);
+        user = await users.GetUserById(rtoken.UserId);
+        rtoken = await refreshService.GetByUserId(user.Id);
+        request.RefreshToken = rtoken.Token;
+        HttpStatusCode statusCode = (HttpStatusCode)response
+            .GetType()
+            .GetProperty("StatusCode")
+            .GetValue(response, null);
+        if (statusCode.ToString().Equals("OK"))
+        {
+            NavigationManager.NavigateTo($"/{page}/{rtoken.UserId.ToString()}", forceLoad: true);
+        }
+        else
+        {
+            Toaster.Add("You have expired your login time", MatToastType.Danger, "Authentication failed");
+            await HandleLogout();
+        }
+
+    }
+
+    private async Task HandleLogout()
+    {
+        await authController.Logout(request.RefreshToken);
+        NavigateToHomePage();
+    }
+    private async Task NavigateToMain()
+    {
+        await HandleRefresh("index");
+    }
+    private async Task NavigateToProducts()
+    {
+        await HandleRefresh("products");
+    }
+
+    private void NavigateToHomePage()
+    {
+        NavigationManager.NavigateTo("", forceLoad: true) ;
+    }
+
+    private async Task NavigateToShoppingCart()
+    {
+        await HandleRefresh("cart");
+    }
+
+
+    private async Task NavigateToProfilePage()
+    {
+
+        await HandleRefresh("ProfilePage");
+    }
+
+    private async Task NavigateToOrdersPage()
+    {
+        await HandleRefresh("orders");
+    }
+
+}

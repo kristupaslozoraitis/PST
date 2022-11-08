@@ -1,0 +1,42 @@
+﻿@page "/products"
+
+<h5>It only takes a minute and you can show your joy to others!</h5>
+<button type="button" class="btn btn-outline-info" @onclick="ShowForm">Upload</button>
+<br />
+<div class="mat-layout-grid">
+    <div class="mat-layout-grid-inner">
+        @foreach (var product in Products)
+        {
+            <ProductCard Product="product" User="user" />
+        }
+    </div>
+</div>
+
+@code
+{
+
+    public List<Product> Products { get; set; } = new List<Product>();
+    public User user { get; set; } = new User();
+
+    protected async override Task OnInitializedAsync()
+    {
+        string token = request.RefreshToken;
+        RefreshToken rtoken = await refreshService.GetByToken(token);
+        user = await users.GetUserById(rtoken.UserId);
+        Products = await productService.GetProductsByUserId(user.Id);
+    }
+
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+
+    private void ShowForm()
+    {
+        var options = new ModalOptions()
+        {
+            Class = "blazored-modal-sell"
+        };
+
+        Modal.Show<SellForm>("Upload and sell your joy!", options);
+    }
+}

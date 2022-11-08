@@ -1,0 +1,12 @@
+﻿
+    <button type="button" class="btn btn-outline-info" style="width: 100px" @onclick="ShowForm">Login</button>
+
+@code {
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+    private void ShowForm()
+    {
+        Modal.Show<LoginForm>("Welcome to our Family!");
+    }
+}
