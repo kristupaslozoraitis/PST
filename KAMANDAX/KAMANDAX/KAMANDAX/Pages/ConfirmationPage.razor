@@ -189,7 +189,8 @@
                  ";
             using (SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587))
             {
-                smtp.Credentials = new System.Net.NetworkCredential("kamandaax", "kamandax123");
+                smtp.UseDefaultCredentials = false;
+                smtp.Credentials = new System.Net.NetworkCredential("kamandaax", "fulczobppsigilbx");
                 smtp.EnableSsl = true;
                 smtp.Send(mail);
             }
