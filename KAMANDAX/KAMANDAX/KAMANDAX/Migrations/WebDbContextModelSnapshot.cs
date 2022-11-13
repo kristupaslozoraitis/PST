@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
+#nullable disable
+
 namespace KAMANDAX.Migrations
 {
     [DbContext(typeof(WebDbContext))]
@@ -15,9 +17,10 @@ namespace KAMANDAX.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("ProductVersion", "5.0.4")
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
             modelBuilder.Entity("KAMANDAX.Models.CartItem", b =>
                 {
@@ -48,7 +51,7 @@ namespace KAMANDAX.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CartItems");
+                    b.ToTable("CartItems", (string)null);
                 });
 
             modelBuilder.Entity("KAMANDAX.Models.Comment", b =>
@@ -68,7 +71,36 @@ namespace KAMANDAX.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
+                });
+
+            modelBuilder.Entity("KAMANDAX.Models.OrderedProducts", b =>
+                {
+                    b.Property<Guid>("OrderedProductID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("ImageData")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<Guid>("OrderID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("OrderedProductID");
+
+                    b.ToTable("OrderedProducts", (string)null);
                 });
 
             modelBuilder.Entity("KAMANDAX.Models.OrderInformation", b =>
@@ -158,36 +190,7 @@ namespace KAMANDAX.Migrations
 
                     b.HasKey("OrderID");
 
-                    b.ToTable("OrderInformation");
-                });
-
-            modelBuilder.Entity("KAMANDAX.Models.OrderedProducts", b =>
-                {
-                    b.Property<Guid>("OrderedProductID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("ImageData")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<Guid>("OrderID")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Price")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("OrderedProductID");
-
-                    b.ToTable("OrderedProducts");
+                    b.ToTable("OrderInformation", (string)null);
                 });
 
             modelBuilder.Entity("KAMANDAX.Models.Product", b =>
@@ -236,7 +239,7 @@ namespace KAMANDAX.Migrations
 
                     b.HasKey("ProductId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("KAMANDAX.Models.RefreshToken", b =>
@@ -253,7 +256,7 @@ namespace KAMANDAX.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("KAMANDAX.Models.User", b =>
@@ -285,7 +288,7 @@ namespace KAMANDAX.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 #pragma warning restore 612, 618
         }
