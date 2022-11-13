@@ -11,9 +11,9 @@ namespace KAMANDAX.Controllers
 {
     public class ProductController : Controller
     {
-        private readonly ProductService _products;
+        private readonly IProductService _products;
 
-        public ProductController(ProductService products)
+        public ProductController(IProductService products)
         {
             _products = products;
         }

@@ -24,12 +24,12 @@ namespace KAMANDAX.Controllers
         private readonly UserService _users;
         private readonly RefreshTokenService _refreshTokenService;
         private AuthenticatedUserResponse _authenticatedUserResponse;
-        private ProductService _productService;
+        private IProductService _productService;
 
         public AuthController(RefreshTokenValidator refreshTokenValidator,
             Authenticator authenticator,
             UserService users,
-            RefreshTokenService refreshTokenService, AuthenticatedUserResponse authenticatedUserResponse,ProductService productService)
+            RefreshTokenService refreshTokenService, AuthenticatedUserResponse authenticatedUserResponse, IProductService productService)
         {
             _refreshTokenValidator = refreshTokenValidator;
             _authenticator = authenticator;

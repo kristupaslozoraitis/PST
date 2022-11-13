@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace KAMANDAX.Services
 {
-    public class ProductService
+    public class ProductService : IProductService
     {
         private readonly WebDbContext _db;
 

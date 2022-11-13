@@ -52,7 +52,7 @@ builder.Services.AddSingleton<RefreshToken>();
 builder.Services.AddScoped<Authenticator>();
 builder.Services.AddSingleton<TokenGenerator>();
 builder.Services.AddScoped<RefreshTokenService>();
-builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<CartItemController>();
 builder.Services.AddScoped<CartItemService>();

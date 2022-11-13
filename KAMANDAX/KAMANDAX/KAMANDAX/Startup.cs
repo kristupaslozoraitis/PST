@@ -70,7 +70,7 @@ namespace KAMANDAX
             services.AddScoped<Authenticator>();
             services.AddSingleton<TokenGenerator>();
             services.AddScoped<RefreshTokenService>();
-            services.AddScoped<ProductService>();
+            services.AddScoped<IProductService, ProductService>();
             services.AddScoped<UserService>();
             services.AddScoped<CartItemController>();
             services.AddScoped<CartItemService>();

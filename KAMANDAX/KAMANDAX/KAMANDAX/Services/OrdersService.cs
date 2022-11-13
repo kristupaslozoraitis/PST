@@ -77,6 +77,7 @@ namespace KAMANDAX.Services
                     }
                 }
             }
+
             return terminals;
         }
 
