@@ -1,16 +1,15 @@
 ﻿using KAMANDAX.DB;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using KAMANDAX.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Text;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace KAMANDAX.Services
 {
-    public class OrdersService
+    public class OrdersService : IOrdersService
     {
         private readonly WebDbContext _db;
 
@@ -19,7 +18,7 @@ namespace KAMANDAX.Services
             _db = db;
         }
 
-         public async Task<List<OrderInformation>> GetOrders()
+        public async Task<List<OrderInformation>> GetOrders()
         {
             return await _db.OrderInformation.ToListAsync();
         }
@@ -83,8 +82,8 @@ namespace KAMANDAX.Services
 
         public async Task<OrderInformation> Create(OrderInformation order)
         {
-             _db.Add(order);
-        
+            _db.Add(order);
+
             await _db.SaveChangesAsync();
 
             return order;
@@ -119,7 +118,7 @@ namespace KAMANDAX.Services
             oldOrder.TotalPrice = order.TotalPrice;
             oldOrder.OrderDate = order.OrderDate;
             oldOrder.ConfirmedOrder = order.ConfirmedOrder;
-            
+
             await _db.SaveChangesAsync();
         }
         public async Task<OrderedProducts> CreateOrderedProducts(OrderedProducts orderedProducts)

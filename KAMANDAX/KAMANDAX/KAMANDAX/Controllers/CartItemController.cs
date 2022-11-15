@@ -11,9 +11,9 @@ namespace KAMANDAX.Controllers
     public class CartItemController : Controller
     {
 
-        private readonly CartItemService _cartItems;
+        private readonly ICartItemService _cartItems;
 
-        public CartItemController(CartItemService cartItems)
+        public CartItemController(ICartItemService cartItems)
         {
             _cartItems = cartItems;
         }
