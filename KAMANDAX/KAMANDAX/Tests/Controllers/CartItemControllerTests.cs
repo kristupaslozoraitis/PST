@@ -27,7 +27,7 @@ namespace Tests.Controllers
         }
 
         [Fact]
-        public async Task AddCartItem_MultipleCartItemsWithSameProductIdExist_Status200Response()
+        public async Task AddCartItem_SingleNotExistingProductAdded_Status200Response()
         {
             WebDbContext context = CreateInMemoryWebDbContext();
             ICartItemService cartItemService = new CartItemService(context);
