@@ -3,15 +3,15 @@ using KAMANDAX.Controllers;
 using KAMANDAX.DB;
 using KAMANDAX.JWT;
 using KAMANDAX.Models;
+using KAMANDAX.Models.Responses;
 using KAMANDAX.Services;
 using KAMANDAX.Services.Authenticators;
 using KAMANDAX.Services.RefreshTokenRepositories;
 using KAMANDAX.Services.TokenValidators;
+using MatBlazor;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,12 +19,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using MatBlazor;
-using KAMANDAX.Models.Responses;
-using Syncfusion.Blazor;
 
 namespace KAMANDAX
 {
@@ -73,7 +68,7 @@ namespace KAMANDAX
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<UserService>();
             services.AddScoped<CartItemController>();
-            services.AddScoped<CartItemService>();
+            services.AddScoped<ICartItemService, CartItemService>();
             services.AddScoped<CommentService>();
             services.AddSingleton<Product>();
             services.AddSingleton<List<Product>>();
@@ -81,7 +76,7 @@ namespace KAMANDAX
             options.UseSqlServer(Configuration.GetConnectionString("default")), ServiceLifetime.Transient);
             services.AddSingleton<User>();
             services.AddScoped<OrderInformationController>();
-            services.AddScoped<OrdersService>();
+            services.AddScoped<IOrdersService, OrdersService>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
             {

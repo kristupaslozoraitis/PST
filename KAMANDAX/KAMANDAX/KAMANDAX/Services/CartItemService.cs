@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace KAMANDAX.Services
 {
-    public class CartItemService
+    public class CartItemService : ICartItemService
     {
         private readonly WebDbContext _db;
 

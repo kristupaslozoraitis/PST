@@ -1,18 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using KAMANDAX.Models;
+﻿using KAMANDAX.Models;
 using KAMANDAX.Services;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 
 namespace KAMANDAX.Controllers
 {
     public class OrderInformationController : Controller
     {
-        private readonly OrdersService _orderItems;
+        private readonly IOrdersService _orderItems;
 
-        public OrderInformationController(OrdersService orderItems)
+        public OrderInformationController(IOrdersService orderItems)
         {
             _orderItems = orderItems;
         }
@@ -50,7 +48,7 @@ namespace KAMANDAX.Controllers
                 TotalPrice = order.TotalPrice,
                 ConfirmedOrder = order.ConfirmedOrder,
                 OrderDate = order.OrderDate
-                
+
             };
 
 
