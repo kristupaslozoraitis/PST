@@ -58,6 +58,27 @@ namespace Tests
             }
         }
 
+        [Fact]
+        public async void CreateComment_Success()
+        {
+            var newComment = new Comment
+            {
+                Id = new Guid("c7b6582c-92d2-4793-be70-64444ba04d1d"),
+                Name = "TestName",
+                Data = "Comment",
+                ProductId = new Guid("140222bd-bc2e-4e82-89a5-6d7b0f6423b3")
+            };
+            var options = new DbContextOptionsBuilder<WebDbContext>()
+               .UseInMemoryDatabase(databaseName: "kamandax")
+               .Options;
+            using var context = new WebDbContext(options);
+            var service = new CommentService(context);
+            var createdComment = await service.Create(newComment);
+
+            var commentFromDb = await context.Comments.FirstOrDefaultAsync(x => x.Id == newComment.Id);
+            Assert.Equal(newComment, commentFromDb);
+        }
+
         public static IEnumerable<object[]> GetData()
         {
             var allData = new List<object[]>
