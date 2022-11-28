@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace Tests
 {
     public class UserServiceTests
@@ -47,7 +49,7 @@ namespace Tests
                     City = "City",
                     PostalCode = "123456"
                 });
-                context.SaveChanges();
+                await context.SaveChangesAsync();
             }
             using(var context = new WebDbContext(options))
             {
@@ -78,7 +80,7 @@ namespace Tests
                     City = "City",
                     PostalCode = "123456"
                 });
-                context.SaveChanges();
+                await context.SaveChangesAsync();
             }
             using (var context = new WebDbContext(options))
             {
@@ -125,6 +127,7 @@ namespace Tests
                 .UseInMemoryDatabase(databaseName: "kamandax")
                 .Options;
             using var context = new WebDbContext(options);
+            context.Database.EnsureDeleted();
             context.Users.Add(new User
             {
                 Id = Guid.NewGuid(),
@@ -147,7 +150,7 @@ namespace Tests
                 City = "City",
                 PostalCode = "123456"
             });
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             var userService = new UserService(context);
             var users = await userService.GetUsers();
             Assert.Equal(users.Count, 2);
@@ -161,6 +164,7 @@ namespace Tests
                 .UseInMemoryDatabase(databaseName: "kamandax")
                 .Options;
             using var context = new WebDbContext(options);
+            context.Database.EnsureDeleted();
             context.Users.Add(new User
             {
                 Id = Guid.Parse("140222bd-bc2e-4e82-89a5-6d7b0f6423b3"),
@@ -183,7 +187,7 @@ namespace Tests
                 City = "City",
                 PostalCode = "123456"
             });
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             var userService = new UserService(context);
             await userService.Delete(Guid.Parse("325f1241-240b-4c4b-bc4e-80e7598a1765"));
             var user = await context.Users.FirstOrDefaultAsync(x => x.Id == Guid.Parse("325f1241-240b-4c4b-bc4e-80e7598a1765"));
@@ -207,7 +211,7 @@ namespace Tests
                 City = "City",
                 PostalCode = "123456"
             });
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             var userService = new UserService(context);
             var user = await context.Users.FirstOrDefaultAsync(x => x.Email == "email1@email.com");
             Assert.Equal("Password", user.Password);
